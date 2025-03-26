@@ -15,6 +15,7 @@ func main() {
 
 	//Handler functions here (blank for first step)
 	mux.Handle("/", fileServer)
+	mux.Handle("/assets/logo.png", fileServer)
 
 	// Create server struct
 	server := &http.Server{
