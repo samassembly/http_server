@@ -1,0 +1,24 @@
+# Binaries for programs and plugins
+*.exe
+*.out
+*.o
+
+# Temporary files
+*~
+*.swp
+*.tmp
+
+# Build artifacts
+/bin/
+/pkg/
+
+# Vendor directory
+/vendor/
+
+# Coverage reports
+*.cover
+
+# Local configuration files
+.env
+
+out
