@@ -10,12 +10,9 @@ func main() {
 	// Create new ServeMux
 	mux := http.NewServeMux()
 
-	// Create new Fileserver
-	fileServer := http.FileServer(http.Dir("."))
-
-	//Handler functions here (blank for first step)
-	mux.Handle("/", fileServer)
-	mux.Handle("/assets/logo.png", fileServer)
+	//handler functions 
+	mux.Handle("/app/", http.StripPrefix("/app", http.FileServer(http.Dir("."))))
+	mux.HandleFunc("/healthz", handlerReadiness)
 
 	// Create server struct
 	server := &http.Server{
@@ -27,3 +24,12 @@ func main() {
 	server.ListenAndServe()
 }
 
+func handlerReadiness(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(http.StatusText(http.StatusOK)))
+}
+
+type apiConfig struct {
+	fileserverHits atomic.Int32
+}
