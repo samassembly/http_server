@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"os"
 	"github.com/joho/godotenv"
-	"github.com/samassembly/http-server/internal/database"
+	"github.com/samassembly/http_server/internal/database"
 	_ "github.com/lib/pq"
 )
 
