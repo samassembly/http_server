@@ -20,5 +20,5 @@
 
 # Local configuration files
 .env
-
+env
 /out
