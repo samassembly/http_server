@@ -21,10 +21,7 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 
 	//open connection to database
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		return err
-	}
+	db, _ := sql.Open("postgres", dbURL)
 	dbQueries := database.New(db)
 
 	// Create new apiConfig
