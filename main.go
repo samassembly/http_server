@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"sync/atomic"
 	"os"
+	"time"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/samassembly/http_server/internal/database"
 	_ "github.com/lib/pq"
@@ -13,12 +15,21 @@ import (
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	databaseQueries *database.Queries
+	cfgPlatform string
+}
+
+type User struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Email     string    `json:"email"`
 }
 
 func main() {
 	//load .env into vars
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
+	platform := os.Getenv("PLATFORM")
 
 	//open connection to database
 	db, _ := sql.Open("postgres", dbURL)
@@ -28,6 +39,7 @@ func main() {
 	apiCfg := apiConfig{
 		fileserverHits: atomic.Int32{},
 		databaseQueries: dbQueries,
+		cfgPlatform: platform,
 	}
 
 	// Create new ServeMux
@@ -39,6 +51,7 @@ func main() {
 	//api
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 	mux.HandleFunc("POST /api/validate_chirp", handlerValidate)
+	mux.HandleFunc("POST /api/users", apiCfg.handlerUsers)
 	//admin
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)

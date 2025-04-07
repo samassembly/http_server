@@ -7,3 +7,7 @@ VALUES (
     $1 -- email from first parameter from query
 )
 RETURNING *;
+
+-- name: ResetUsers :one
+DELETE FROM users
+RETURNING *;
