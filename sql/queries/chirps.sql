@@ -8,3 +8,7 @@ VALUES (
     $2 -- user_id from second parameter of query
 )
 RETURNING *;
+
+-- name: GetChirps :many
+SELECT * FROM chirps
+ORDER BY created_at ASC;
