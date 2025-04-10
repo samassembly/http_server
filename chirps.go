@@ -90,14 +90,63 @@ func (cfg *apiConfig) handlerChirps(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
-	chirps := []database.Chirp{}
-	chirps, err := cfg.databaseQueries.GetChirps(r.Context())
+	dbChirps, err := cfg.databaseQueries.GetChirps(r.Context())
 	if err != nil {
 		log.Printf("Error getting chirps: %s", err)
 		w.WriteHeader(500)
 		return
 	}
+
+	chirps := []Chirp{}	
+	for _, dbChirp := range dbChirps {
+		chirps = append(chirps, Chirp{
+			ID:        dbChirp.ID,
+			CreatedAt: dbChirp.CreatedAt,
+			UpdatedAt: dbChirp.UpdatedAt,
+			User_ID:    dbChirp.UserID,
+			Body:      dbChirp.Body,
+		})
+	}
+
 	dat, err := json.Marshal(chirps)
+	if err != nil {
+		log.Printf("Error marshalling JSON: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(dat)
+	return
+}
+
+func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
+	id_str := r.PathValue("id")
+	id, err := uuid.Parse(id_str)
+	if err != nil {
+		log.Printf("Error parsing chirp id: %s", err)
+	 	w.WriteHeader(500)
+	 	return
+	}
+
+	dbChirp, err := cfg.databaseQueries.GetChirp(r.Context(), id)
+	if err != nil {
+		log.Printf("Error getting chirp: %s", err)
+		w.WriteHeader(404)
+		return
+	}
+
+	chirp := Chirp{
+		ID:        dbChirp.ID,
+		CreatedAt: dbChirp.CreatedAt,
+		UpdatedAt: dbChirp.UpdatedAt,
+		User_ID:   dbChirp.UserID,
+		Body:      dbChirp.Body,
+	}	
+	
+
+	dat, err := json.Marshal(chirp)
 	if err != nil {
 		log.Printf("Error marshalling JSON: %s", err)
 		w.WriteHeader(500)
