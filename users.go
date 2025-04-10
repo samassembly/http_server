@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"log"
 	"encoding/json"
+	"github.com/samassembly/http_server/internal/auth"
+	"github.com/samassembly/http_server/internal/database"
 )
 
 func (cfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
@@ -11,6 +13,7 @@ func (cfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 	//decode request body
 	type parameters struct {
         Email string `json:"email"`
+		Password string `json:"password"`
     }
 
 	decoder := json.NewDecoder(r.Body)
@@ -22,8 +25,21 @@ func (cfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 		return
     }
 
+	//hash password from params
+	hash, err := auth.HashPassword(params.Password)
+	if err != nil {
+		log.Printf("Error creating new user: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	dbParams := database.CreateUserParams{
+		Email: params.Email,
+		HashedPassword: hash,
+	}
+
 	//call the database users function to create user with the decoded params.Email result
-	user, err := cfg.databaseQueries.CreateUser(r.Context(), params.Email)
+	user, err := cfg.databaseQueries.CreateUser(r.Context(), dbParams)
 	if err != nil {
 		log.Printf("Error creating new user: %s", err)
 		w.WriteHeader(500)
