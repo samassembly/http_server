@@ -25,4 +25,16 @@ func (cfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
     }
 
 	//check for user matching email
+	dbUser, err := cfg.databaseQueries.LoginUser(r.Context(), params.email)
+	if err != nil {
+		log.Printf("Incorrect Email or Password")
+		w.WriteHeader(401)
+		w.Write("Incorrect Email or Password")
+		return
+	}
+
+	user := User{
+		ID: dbUser.ID,
+		CreatedAt: dbUser
+	}
 }
