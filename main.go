@@ -9,13 +9,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/samassembly/http_server/internal/database"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	databaseQueries *database.Queries
 	cfgPlatform string
+	servSecret string
 }
 
 type User struct {
@@ -38,6 +39,7 @@ func main() {
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
+	secret := os.Getenv("SECRET")
 
 	//open connection to database
 	db, _ := sql.Open("postgres", dbURL)
@@ -48,6 +50,7 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		databaseQueries: dbQueries,
 		cfgPlatform: platform,
+		servSecret: secret
 	}
 
 	// Create new ServeMux

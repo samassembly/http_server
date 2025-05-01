@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
+	"strings"
+	"net/http"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -62,4 +63,10 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 		return uuid.Nil, fmt.Errorf("invalid user ID: %w", err)
 	}
 	return id, nil
+}
+
+func GetBearerToken(headers http.Header) (string, error) {
+	auth_string := headers.Get("Authorization")
+	token_string := strings.TrimPrefix(auth_string, "Bearer ")
+	return token_string, nil
 }
