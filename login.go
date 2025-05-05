@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"log"
+	"time"
 	"encoding/json"
 	"github.com/samassembly/http_server/internal/auth"
 	//"github.com/samassembly/http_server/internal/database"
@@ -13,6 +14,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
         Email string `json:"email"`
 		Password string `json:"password"`
+		Expires_in_seconds time.Duration `json:"expires_in_seconds"`
     }
 
 	decoder := json.NewDecoder(r.Body)
@@ -41,12 +43,30 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//generate token
+	
+	var Token_Expires time.Duration
+	if params.Expires_in_seconds != time.Duration(0) && params.Expires_in_seconds < 3600 {
+		Token_Expires = time.Duration(params.Expires_in_seconds) * time.Second
+	} else {
+		Token_Expires = 60 * time.Minute
+	}
+	
+
+	token, err := auth.MakeJWT(dbUser.ID, cfg.servSecret, Token_Expires)
+	if err != nil {
+		log.Printf("Failed to create JWT: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
 	//craft response
 	respBody := User{
 		ID: dbUser.ID,
 		CreatedAt: dbUser.CreatedAt,
 		UpdatedAt: dbUser.UpdatedAt,
 		Email: dbUser.Email,
+		Token: token,
 	}
 
 	dat, err := json.Marshal(respBody)

@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/samassembly/http_server/internal/database"
-	"github.com/lib/pq"
+	//"github.com/lib/pq"
 )
 
 type apiConfig struct {
@@ -24,6 +24,7 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+	Token	  string	`json:"token"`
 }
 
 type Chirp struct {
@@ -50,7 +51,7 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		databaseQueries: dbQueries,
 		cfgPlatform: platform,
-		servSecret: secret
+		servSecret: secret,
 	}
 
 	// Create new ServeMux
