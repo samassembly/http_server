@@ -6,10 +6,11 @@ import (
 	"sync/atomic"
 	"os"
 	"time"
+	"log"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/samassembly/http_server/internal/database"
-	//"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
@@ -43,7 +44,12 @@ func main() {
 	secret := os.Getenv("SECRET")
 
 	//open connection to database
-	db, _ := sql.Open("postgres", dbURL)
+	// var db *sql.DB
+	db, err := sql.Open("postgres", dbURL)
+	if db == nil {
+		log.Fatal("Database connection is not initialized. ERROR: %s", err)
+	}
+	defer db.Close()
 	dbQueries := database.New(db)
 
 	// Create new apiConfig

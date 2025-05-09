@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"regexp"
 	"github.com/samassembly/http_server/internal/database"
+	"github.com/samassembly/http_server/internal/auth"
 	"github.com/google/uuid"
 )
 
@@ -28,6 +29,20 @@ func (cfg *apiConfig) handlerChirps(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
     }
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		log.Printf("Error getting Bearer Token: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.servSecret)
+	if err != nil {
+		log.Printf("JWT Invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized) // Use http.StatusUnauthorized for better readability
+		return
+	}
 
 	//encode response body
 	//invalid response length
@@ -57,13 +72,15 @@ func (cfg *apiConfig) handlerChirps(w http.ResponseWriter, r *http.Request) {
 
 	chirpParams := database.CreateChirpParams{
 		Body: cleanedBody,
-		UserID: params.UserID,
+		UserID: userID,
 	}
 
 	//call the database chirp function to create chirp with the clean body
 	chirp, err := cfg.databaseQueries.CreateChirp(r.Context(), chirpParams)
 	if err != nil {
 		log.Printf("Error creating new chirp: %s", err)
+		log.Printf("Input Parameters: %s", params)
+		log.Printf("Params UserID: %s", params.UserID)
 		w.WriteHeader(500)
 		return
 	}
