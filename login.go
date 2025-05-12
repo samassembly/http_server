@@ -6,7 +6,7 @@ import (
 	"time"
 	"encoding/json"
 	"github.com/samassembly/http_server/internal/auth"
-	//"github.com/samassembly/http_server/internal/database"
+	"github.com/samassembly/http_server/internal/database"
 )
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +14,6 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
         Email string `json:"email"`
 		Password string `json:"password"`
-		Expires_in_seconds time.Duration `json:"expires_in_seconds"`
     }
 
 	decoder := json.NewDecoder(r.Body)
@@ -46,16 +45,30 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	//generate token
 	
 	var Token_Expires time.Duration
-	if params.Expires_in_seconds != time.Duration(0) && params.Expires_in_seconds < 3600 {
-		Token_Expires = time.Duration(params.Expires_in_seconds) * time.Second
-	} else {
-		Token_Expires = 60 * time.Minute
-	}
+	Token_Expires = 24 * 60 * time.Hour
 	
 
-	token, err := auth.MakeJWT(dbUser.ID, cfg.servSecret, Token_Expires)
+	accessToken, err := auth.MakeJWT(dbUser.ID, cfg.servSecret, Token_Expires)
 	if err != nil {
 		log.Printf("Failed to create JWT: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	refresh_token, err := auth.MakeRefreshToken()
+	if err != nil {
+		log.Printf("Failed to create refresh token: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	_, err = cfg.databaseQueries.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams {
+		UserID:    dbUser.ID,
+		Token:     refresh_token,
+		ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * 60),
+	})
+	if err != nil {
+		log.Printf("Couldn't save refresh token: %s", err)
 		w.WriteHeader(500)
 		return
 	}
@@ -66,7 +79,8 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: dbUser.CreatedAt,
 		UpdatedAt: dbUser.UpdatedAt,
 		Email: dbUser.Email,
-		Token: token,
+		Token: accessToken,
+		RefreshToken: refresh_token,
 	}
 
 	dat, err := json.Marshal(respBody)

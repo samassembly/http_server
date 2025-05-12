@@ -40,6 +40,8 @@ func (cfg *apiConfig) handlerChirps(w http.ResponseWriter, r *http.Request) {
 	userID, err := auth.ValidateJWT(token, cfg.servSecret)
 	if err != nil {
 		log.Printf("JWT Invalid: %s", err)
+		//debugging
+		log.Printf("Bearer Token: %s", token)
 		w.WriteHeader(http.StatusUnauthorized) // Use http.StatusUnauthorized for better readability
 		return
 	}
