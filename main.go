@@ -43,6 +43,7 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
 	secret := os.Getenv("SECRET")
+	polkaApiKey := os.Getenv("POLKA_KEY")
 
 	//open connection to database
 	// var db *sql.DB
@@ -59,6 +60,7 @@ func main() {
 		databaseQueries: dbQueries,
 		cfgPlatform: platform,
 		servSecret: secret,
+		polkaKey: polkaApiKey,
 	}
 
 	// Create new ServeMux
