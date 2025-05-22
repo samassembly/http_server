@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"log"
+	"sort"
 	"encoding/json"
 	"regexp"
 	"github.com/samassembly/http_server/internal/database"
@@ -114,8 +115,28 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	authorID := uuid.Nil
+	authorIDString := r.URL.Query().Get("author_id")
+	if authorIDString != "" {
+		authorID, err = uuid.Parse(authorIDString)
+		if err != nil {
+			log.Printf("Invalid author ID", err)
+			w.WriteHeader(500)
+			return
+		}
+	}
+
+	sortDirection := "asc"
+	sortQueryString := r.URL.Query().Get("sort")
+	if sortQueryString == "desc" {
+		sortDirection = "desc"
+	}
+
 	chirps := []Chirp{}	
 	for _, dbChirp := range dbChirps {
+		if authorID != uuid.Nil && dbChirp.UserID != authorID {
+			continue
+		}
 		chirps = append(chirps, Chirp{
 			ID:        dbChirp.ID,
 			CreatedAt: dbChirp.CreatedAt,
@@ -124,6 +145,13 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 			Body:      dbChirp.Body,
 		})
 	}
+
+	sort.Slice(chirps, func(i, j int) bool {
+		if sortDirection == "desc" {
+			return chirps[i].CreatedAt.After(chirps[j].CreatedAt)
+		}
+		return chirps[i].CreatedAt.Before(chirps[j].CreatedAt)
+	})
 
 	dat, err := json.Marshal(chirps)
 	if err != nil {
