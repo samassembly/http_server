@@ -5,6 +5,7 @@ import (
 	"log"
 	"encoding/json"
 	"github.com/google/uuid"
+	"github.com/samassembly/http_server/internal/auth"
 )
 
 func (cfg *apiConfig) handlerPolkaWebhook(w http.ResponseWriter, r *http.Request) {
@@ -18,10 +19,22 @@ func (cfg *apiConfig) handlerPolkaWebhook(w http.ResponseWriter, r *http.Request
 		Data WebhookData `json:"data"`
 	}
 		
+apiKey, err := auth.GetAPIKey(r.Header)
+if err != nil {
+	log.Printf("Error retrieving API Key: %s", err)
+	w.WriteHeader(500)
+	return
+}
+
+if apiKey != cfg.polkaKey {
+	log.Printf("Invalid API Key")
+	w.WriteHeader(401)
+	return
+}
 
 decoder := json.NewDecoder(r.Body)
 reqBody := WebhookRequest{}
-err := decoder.Decode(&reqBody)
+err = decoder.Decode(&reqBody)
 if err != nil {
 	log.Printf("Error decoding webhook request: %s", err)
 	w.WriteHeader(500)
