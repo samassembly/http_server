@@ -51,6 +51,7 @@ func (cfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		Email: user.Email,
+		ChirpyRed: user.IsChirpyRed,
 	}
 
     dat, err := json.Marshal(respBody)
@@ -123,6 +124,7 @@ func (cfg *apiConfig) handlerUpdateUser(w http.ResponseWriter, r *http.Request) 
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		Email: user.Email,
+		ChirpyRed: user.IsChirpyRed,
 	}
 
     dat, err := json.Marshal(respBody)

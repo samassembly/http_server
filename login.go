@@ -81,6 +81,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		Email: dbUser.Email,
 		Token: accessToken,
 		RefreshToken: refresh_token,
+		ChirpyRed: dbUser.IsChirpyRed,
 	}
 
 	dat, err := json.Marshal(respBody)

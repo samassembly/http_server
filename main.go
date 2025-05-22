@@ -18,6 +18,7 @@ type apiConfig struct {
 	databaseQueries *database.Queries
 	cfgPlatform string
 	servSecret string
+	polkaKey string
 }
 
 type User struct {
@@ -27,6 +28,7 @@ type User struct {
 	Email     string    `json:"email"`
 	Token	  string	`json:"token"`
 	RefreshToken string `json:"refresh_token"`
+	ChirpyRed bool `json:"is_chirpy_red"`
 }
 
 type Chirp struct {
@@ -80,6 +82,10 @@ func main() {
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
 	mux.HandleFunc("PUT /api/users", apiCfg.handlerUpdateUser)
 	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.handlerDeleteChirp)
+
+	//polka
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerPolkaWebhook)
+
 	//no body
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
 	mux.HandleFunc("POST /api/revoke", apiCfg.handlerRevoke)
